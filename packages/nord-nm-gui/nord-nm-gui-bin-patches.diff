@@ -1,0 +1,174 @@
+diff --git a/nord_nm_gui.py b/nord_nm_gui.py
+index 6cae994..1d78690 100644
+--- a/nord_nm_gui.py
++++ b/nord_nm_gui.py
+@@ -1,3 +1,4 @@
++#!/usr/bin/env python3.7
+ # -*- coding: utf-8 -*-
+ # NordVPN-NetworkManager-GUI a graphical frontend for both NordVPN and the Network Manager
+ # Copyright (C) 2018 Vincent Foster-Mueller
+@@ -751,8 +752,8 @@ class MainWindow(QtWidgets.QMainWindow):
+         """
+         self.sudo_password = self.sudo_dialog.sudo_password.text()
+         try:
+-            p1 = subprocess.Popen(['echo', self.sudo_password], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+-            p2 = subprocess.Popen(['sudo', '-S', 'whoami'], stdin=p1.stdout, stdout=subprocess.PIPE, encoding='utf-8', stderr=subprocess.PIPE)
++            p1 = subprocess.Popen(['/run/current-system/sw/bin/echo', self.sudo_password], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
++            p2 = subprocess.Popen(['/run/wrappers/bin/sudo', '-S', '/run/current-system/sw/bin/whoami'], stdin=p1.stdout, stdout=subprocess.PIPE, encoding='utf-8', stderr=subprocess.PIPE)
+             p1.stdout.close()
+             output = p2.communicate()[0].strip()
+             p2.stdout.close()
+@@ -803,7 +804,7 @@ class MainWindow(QtWidgets.QMainWindow):
+         if interfaces:
+             interface_string = '|'.join(interfaces)
+             script =(
+-            '#!/bin/bash\n\n'
++            '#!/usr/bin/env bash\n\n'
+             'if [[ "$1" =~ ' + interface_string + ' ]] && [[ "$2" =~ up|connectivity-change ]]; then\n'
+             '  nmcli con up id "' + self.generate_connection_name() + '"\n'
+             'fi\n'
+@@ -815,16 +816,16 @@ class MainWindow(QtWidgets.QMainWindow):
+             print(ex)
+             self.statusbar.showMessage("ERROR building script file")
+         try:
+-            p1 = subprocess.Popen(['echo', self.sudo_password], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+-            p2 = subprocess.Popen(['sudo', '-S', 'mv', self.scripts_path + '/auto_connect', self.network_manager_path + 'auto_connect'], stdin=p1.stdout, stdout=subprocess.PIPE)
++            p1 = subprocess.Popen(['/run/current-system/sw/bin/echo', self.sudo_password], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
++            p2 = subprocess.Popen(['/run/wrappers/bin/sudo', '-S', 'mv', self.scripts_path + '/auto_connect', self.network_manager_path + 'auto_connect'], stdin=p1.stdout, stdout=subprocess.PIPE)
+             p1.stdout.close()
+             p2.stdout.close()
+-            p3 = subprocess.Popen(['echo', self.sudo_password], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+-            p4 = subprocess.Popen(['sudo', '-S', 'chown', 'root:root', self.network_manager_path + 'auto_connect'], stdin=p3.stdout, stdout=subprocess.PIPE)
++            p3 = subprocess.Popen(['/run/current-system/sw/bin/echo', self.sudo_password], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
++            p4 = subprocess.Popen(['/run/wrappers/bin/sudo', '-S', 'chown', 'root:root', self.network_manager_path + 'auto_connect'], stdin=p3.stdout, stdout=subprocess.PIPE)
+             p3.stdout.close()
+             p4.stdout.close()
+-            p5 = subprocess.Popen(['echo', self.sudo_password], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+-            p6 = subprocess.Popen(['sudo', '-S', 'chmod', '744', self.network_manager_path + 'auto_connect'], stdin=p5.stdout, stdout=subprocess.PIPE)
++            p5 = subprocess.Popen(['/run/current-system/sw/bin/echo', self.sudo_password], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
++            p6 = subprocess.Popen(['/run/wrappers/bin/sudo', '-S', 'chmod', '744', self.network_manager_path + 'auto_connect'], stdin=p5.stdout, stdout=subprocess.PIPE)
+             p5.stdout.close()
+             p6.stdout.close()
+             self.config['SETTINGS']['auto_connect'] = 'True'
+@@ -846,8 +847,8 @@ class MainWindow(QtWidgets.QMainWindow):
+             if not self.sudo_password:  # dialog was canceled
+                 return False
+             try:
+-                p1 = subprocess.Popen(['echo', self.sudo_password], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+-                p2 = subprocess.Popen(['sudo', '-S', 'rm', self.network_manager_path + 'auto_connect'], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++                p1 = subprocess.Popen(['/run/current-system/sw/bin/echo', self.sudo_password], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
++                p2 = subprocess.Popen(['/run/wrappers/bin/sudo', '-S', 'rm', self.network_manager_path + 'auto_connect'], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                 p1.stdout.close()
+                 p2.stdout.close()
+                 self.config['SETTINGS']['auto_connect'] = 'False'
+@@ -858,8 +859,8 @@ class MainWindow(QtWidgets.QMainWindow):
+         elif not self.auto_connect_box.isChecked() and self.sudo_password and self.config.getboolean('SETTINGS', 'auto_connect'):
+ 
+             try:
+-                p1 = subprocess.Popen(['echo', self.sudo_password], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+-                p2 = subprocess.Popen(['sudo', '-S', 'rm', self.network_manager_path + 'auto_connect'], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++                p1 = subprocess.Popen(['/run/current-system/sw/bin/echo', self.sudo_password], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
++                p2 = subprocess.Popen(['/run/wrappers/bin/sudo', '-S', 'rm', self.network_manager_path + 'auto_connect'], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                 p1.stdout.close()
+                 p2.stdout.close()
+                 self.config['SETTINGS']['auto_connect'] = 'False'
+@@ -884,7 +885,7 @@ class MainWindow(QtWidgets.QMainWindow):
+         Generates bash killswitch script and moves it to the NetworkManager
+         """
+         script = (
+-            '#!/bin/bash\n'
++            '#!/usr/bin/env bash\n'
+             'PERSISTENCE_FILE=' + os.path.join(self.scripts_path, '.killswitch_data') + '\n\n'
+             'case $2 in'
+             '  vpn-up)\n'
+@@ -900,18 +901,18 @@ class MainWindow(QtWidgets.QMainWindow):
+             with open(os.path.join(self.scripts_path, 'kill_switch'), 'w') as kill_switch:
+                 print(script, file=kill_switch)
+ 
+-            p1 = subprocess.Popen(['echo', self.sudo_password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+-            p2 = subprocess.Popen(['sudo', '-S', 'mv', self.scripts_path + '/kill_switch', self.network_manager_path + 'kill_switch'], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++            p1 = subprocess.Popen(['/run/current-system/sw/bin/echo', self.sudo_password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
++            p2 = subprocess.Popen(['/run/wrappers/bin/sudo', '-S', 'mv', self.scripts_path + '/kill_switch', self.network_manager_path + 'kill_switch'], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+             p1.stdout.close()
+             p2.stdout.close()
+             time.sleep(0.5)
+-            p3 = subprocess.Popen(['echo', self.sudo_password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+-            p4 = subprocess.Popen(['sudo', '-S', 'chown', 'root:root', self.network_manager_path + 'kill_switch'], stdin=p3.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++            p3 = subprocess.Popen(['/run/current-system/sw/bin/echo', self.sudo_password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
++            p4 = subprocess.Popen(['/run/wrappers/bin/sudo', '-S', 'chown', 'root:root', self.network_manager_path + 'kill_switch'], stdin=p3.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+             time.sleep(0.5)
+             p3.stdout.close()
+             p4.stdout.close()
+-            p5 = subprocess.Popen(['echo', self.sudo_password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+-            p6 = subprocess.Popen(['sudo', '-S', 'chmod', '744', self.network_manager_path + 'kill_switch'], stdin=p5.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++            p5 = subprocess.Popen(['/run/current-system/sw/bin/echo', self.sudo_password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
++            p6 = subprocess.Popen(['/run/wrappers/bin/sudo', '-S', 'chmod', '744', self.network_manager_path + 'kill_switch'], stdin=p5.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+             p5.stdout.close()
+             p6.stdout.close()
+             self.config['SETTINGS']['kill_switch'] = 'True'
+@@ -936,8 +937,8 @@ class MainWindow(QtWidgets.QMainWindow):
+                 self.killswitch_btn.setChecked(False)
+                 return False
+             try:
+-                p1 = subprocess.Popen(['echo', self.sudo_password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+-                p2 = subprocess.Popen(['sudo', '-S', 'rm', self.network_manager_path + 'kill_switch'], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++                p1 = subprocess.Popen(['/run/current-system/sw/bin/echo', self.sudo_password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
++                p2 = subprocess.Popen(['/run/wrappers/bin/sudo', '-S', 'rm', self.network_manager_path + 'kill_switch'], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                 p1.stdout.close()
+                 p2.stdout.close()
+                 self.statusbar.showMessage('Kill switch disabled', 2000)
+@@ -952,8 +953,8 @@ class MainWindow(QtWidgets.QMainWindow):
+         elif not self.killswitch_btn.isChecked() and self.sudo_password and self.config.getboolean('SETTINGS', 'kill_switch'):
+ 
+             try:
+-                p1 = subprocess.Popen(['echo', self.sudo_password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+-                p2 = subprocess.Popen(['sudo', '-S', 'rm', self.network_manager_path + 'kill_switch'], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++                p1 = subprocess.Popen(['/run/current-system/sw/bin/echo', self.sudo_password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
++                p2 = subprocess.Popen(['/run/wrappers/bin/sudo', '-S', 'rm', self.network_manager_path + 'kill_switch'], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                 p1.stdout.close()
+                 p2.stdout.close()
+                 self.statusbar.showMessage('Kill switch disabled', 2000)
+@@ -984,8 +985,8 @@ class MainWindow(QtWidgets.QMainWindow):
+         """
+         if self.sudo_password:
+             try:
+-                p1 = subprocess.Popen(['echo', self.sudo_password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+-                p2 = subprocess.Popen(['sudo', '-S', 'sysctl', '-w', 'net.ipv6.conf.all.disable_ipv6=1', '&&', 'sysctl', '-w', 'net.ipv6.conf.default.disable_ipv6=1'], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++                p1 = subprocess.Popen(['/run/current-system/sw/bin/echo', self.sudo_password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
++                p2 = subprocess.Popen(['/run/wrappers/bin/sudo', '-S', 'sysctl', '-w', 'net.ipv6.conf.all.disable_ipv6=1', '&&', 'sysctl', '-w', 'net.ipv6.conf.default.disable_ipv6=1'], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                 p1.stdout.close()
+                 p2.stdout.close()
+             except subprocess.CalledProcessError:
+@@ -997,8 +998,8 @@ class MainWindow(QtWidgets.QMainWindow):
+ 
+             if self.sudo_password:
+                 try:
+-                    p1 = subprocess.Popen(['echo', self.sudo_password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+-                    p2 = subprocess.Popen(['sudo', '-S', 'sysctl', '-w', 'net.ipv6.conf.all.disable_ipv6=1', '&&', 'sysctl', '-w', 'net.ipv6.conf.default.disable_ipv6=0'], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++                    p1 = subprocess.Popen(['/run/current-system/sw/bin/echo', self.sudo_password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
++                    p2 = subprocess.Popen(['/run/wrappers/bin/sudo', '-S', 'sysctl', '-w', 'net.ipv6.conf.all.disable_ipv6=1', '&&', 'sysctl', '-w', 'net.ipv6.conf.default.disable_ipv6=0'], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                     p1.stdout.close()
+                     p2.stdout.close()
+                 except subprocess.CalledProcessError:
+@@ -1010,8 +1011,8 @@ class MainWindow(QtWidgets.QMainWindow):
+         """
+         if self.sudo_password:
+             try:
+-                p1 = subprocess.Popen(['echo', self.sudo_password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+-                p2 = subprocess.Popen(['sudo', '-S', 'sysctl', '-w', 'net.ipv6.conf.all.disable_ipv6=0', '&&', 'sysctl', '-w', 'net.ipv6.conf.default.disable_ipv6=0'], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++                p1 = subprocess.Popen(['/run/current-system/sw/bin/echo', self.sudo_password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
++                p2 = subprocess.Popen(['/run/wrappers/bin/sudo', '-S', 'sysctl', '-w', 'net.ipv6.conf.all.disable_ipv6=0', '&&', 'sysctl', '-w', 'net.ipv6.conf.default.disable_ipv6=0'], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                 p1.stdout.close()
+                 p2.stdout.close()
+             except subprocess.CalledProcessError:
+@@ -1023,8 +1024,8 @@ class MainWindow(QtWidgets.QMainWindow):
+ 
+             if self.sudo_password:
+                 try:
+-                    p1 = subprocess.Popen(['echo', self.sudo_password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+-                    p2 = subprocess.Popen(['sudo', '-S', 'sysctl', '-w', 'net.ipv6.conf.all.disable_ipv6=0', '&&', 'sysctl', '-w', 'net.ipv6.conf.default.disable_ipv6=0'], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++                    p1 = subprocess.Popen(['/run/current-system/sw/bin/echo', self.sudo_password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
++                    p2 = subprocess.Popen(['/run/wrappers/bin/sudo', '-S', 'sysctl', '-w', 'net.ipv6.conf.all.disable_ipv6=0', '&&', 'sysctl', '-w', 'net.ipv6.conf.default.disable_ipv6=0'], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                     p1.stdout.close()
+                     p2.stdout.close()
+                 except subprocess.CalledProcessError:

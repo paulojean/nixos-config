@@ -1,5 +1,8 @@
 { config, pkgs, ... }:
 
+let
+  packages = pkgs.callPackage ./packages { pkgs = pkgs; } ;
+in
 {
   imports =
     [ # Include the results of the hardware scan.
@@ -84,12 +87,18 @@
     lsof pciutils zip unzip unrar bind cacert
     fzf file
     nodejs yarn
+
     python27Packages.pip python37Packages.pip python3 python
+
+    python37Packages.python-language-server
+    terraform-lsp yaml-language-server
+
     stack visualvm perl shellcheck
     clojure leiningen boot
     transmission transmission-gtk
     networkmanagerapplet arandr
     openvpn gnome3.networkmanager-openvpn
+    rofi
     i3lock-fancy
     gnumake cmake
     unclutter
@@ -101,11 +110,14 @@
     feh
     xdotool
     xorg.xev
-    zathura
+    zathura azpainter
     spotify
     gimp
     wine winetricks lutris vulkan-tools
     gnutls libinput-gestures libgpgerror
+
+    packages.nord-nm-gui
+    packages.teiler
   ];
 
   programs = {
