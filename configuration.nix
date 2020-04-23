@@ -7,7 +7,32 @@
       ./network/hosts.nix
     ];
 
+  nix.gc.automatic = true;
+  nix.gc.options = "--delete-older-than 10d";
+
+  nixpkgs.config.allowUnfree = true;
+
   hardware.cpu.intel.updateMicrocode = true;
+  hardware.bluetooth.enable = true;
+  hardware.bluetooth.extraConfig = "
+    [General]
+    Enable=Source,Sink,Media,Socket
+  ";
+
+  hardware.pulseaudio = {
+    enable = true;
+
+    extraModules = [ pkgs.pulseaudio-modules-bt ];
+
+    # NixOS allows either a lightweight build (default) or full build of PulseAudio to be installed.
+    # Only the full build has Bluetooth support, so it must be selected here.
+    package = pkgs.pulseaudioFull;
+  };
+
+  hardware.bumblebee = {
+    enable = true;
+    pmMethod = "bbswitch";
+  };
 
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
@@ -23,10 +48,7 @@
     "intel_pstate=disable"
   ];
 
-  # networking.hostName = "nixos"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
   networking.networkmanager.enable = true;
-  # networking.networkmanager.packages = [ pkgs.networkmanagerapplet  ];
 
   # The global useDHCP flag is deprecated, therefore explicitly set to false here.
   # Per-interface useDHCP will be mandatory in the future, so this generated config
@@ -35,12 +57,7 @@
   networking.interfaces.enp60s0.useDHCP = true;
   networking.interfaces.wlo1.useDHCP = true;
 
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
   system.autoUpgrade.enable = true;
-  # Select internationalisation properties.
   i18n = {
     consoleFont = "Lat2-Terminus16";
     consoleKeyMap = "us";
@@ -51,9 +68,6 @@
   time.timeZone = "Europe/Stockholm";
 
   environment.pathsToLink = [ "/libexec" ];
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
-  nixpkgs.config.allowUnfree = true;
   environment.systemPackages = with pkgs; [
     albert
     adoptopenjdk-bin
@@ -61,12 +75,14 @@
     jq killall acpi tlp
     bash wget neovim emacs curl kitty
     bash-completion exa lsd bat ack ag fd gnugrep pstree
+    openssl
     usbutils ipad_charge
     firefox bitwarden vlc tmux
     xsel xclip xcape htop sqlite
     git gitAndTools.diff-so-fancy
     docker docker-compose
-    lsof pciutils zip unzip unrar bind cacert fzf
+    lsof pciutils zip unzip unrar bind cacert
+    fzf file
     nodejs yarn
     python27Packages.pip python37Packages.pip python3 python
     stack visualvm perl shellcheck
@@ -74,6 +90,7 @@
     transmission transmission-gtk
     networkmanagerapplet arandr
     openvpn gnome3.networkmanager-openvpn
+    i3lock-fancy
     gnumake cmake
     unclutter
     light
@@ -102,22 +119,6 @@
     font-awesome_5
   ];
 
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = { enable = true; enableSSHSupport = true; };
-
-  # List services that you want to enable:
-
-  # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
-
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
-
   powerManagement.enable = true;
   powerManagement.powertop.enable = true;
   services.tlp.enable = true;
@@ -125,24 +126,9 @@
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
-  hardware.bluetooth.enable = true;
-  hardware.bluetooth.extraConfig = "
-    [General]
-    Enable=Source,Sink,Media,Socket
-  ";
-
   services.blueman.enable = true;
   # Enable sound.
   sound.enable = true;
-  hardware.pulseaudio = {
-    enable = true;
-
-    extraModules = [ pkgs.pulseaudio-modules-bt ];
-
-    # NixOS allows either a lightweight build (default) or full build of PulseAudio to be installed.
-    # Only the full build has Bluetooth support, so it must be selected here.
-    package = pkgs.pulseaudioFull;
-  };
 
   # Enable the X11 windowing system.
   services.xserver =  {
@@ -175,29 +161,61 @@
   # Enable touchpad support.
   services.xserver.libinput.enable = true;
 
+  services.unclutter = {
+    enable = true;
+    timeout = 10;
+  };
+
   services.logind.extraConfig = ''
     HandleSuspendKey=hibernate
     HandleLidSwitch=hibernate
   '';
 
+  services.compton = {
+    enable = true;
+    inactiveOpacity = "0.5";
+  };
+
   security.pam.services.gdm.enableGnomeKeyring = true;
+  #security.sudo.extraConfig = ''
+  #  %wheel ALL=(ALL) NOPASSWD: ${pkgs.light}/bin/light
+  #'';
+  security.sudo.extraRules = [
+    {
+      commands = [
+        {
+          command = "${pkgs.light}/bin/light";
+          options = [ "NOPASSWD" ];
+        }
+      ];
+      groups = [ "wheel" "video" ];
+      users = [ "paulo" ];
+    }
+    {
+      commands = [
+        {
+          command = "/run/current-system/sw/bin/light";
+          options = [ "NOPASSWD" ];
+        }
+      ];
+      groups = [ "wheel" "video" ];
+      users = [ "paulo" ];
+    }
+  ];
 
   services.gnome3.gnome-keyring.enable = true;
-  # programs.seahorse.enable = true;
-  # Enable the KDE Desktop Environment.
-  # services.xserver.displayManager.sddm.enable = true;
-  # services.xserver.desktopManager.plasma5.enable = true;
-
-  hardware.bumblebee = {
-    enable = true;
-    pmMethod = "bbswitch";
-  };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.paulo = {
     isNormalUser = true;
     extraGroups = [ "wheel" "video" "audio" "networkmanager" "kvm" "render" "sddm" "light" ];
   };
+
+  nixpkgs.overlays = [ (self: super: {
+    lutris = super.lutris.overrideAttrs (attrs: rec {
+      patches = [ ./patches/lutris.patch ];
+    });
+  })];
 
   # This value determines the NixOS release with which your system is to be
   # compatible, in order to avoid breaking some software such as database
