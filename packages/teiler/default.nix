@@ -13,7 +13,6 @@ stdenv.mkDerivation rec {
     ffmpeg maim copyq slop rofi xclip
   ];
   patchPhase = ''
-    ls -lah
     rm Makefile
     sed -i -e 's# maim # ${maim}/bin/maim #g' teiler
   '';

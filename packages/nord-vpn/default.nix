@@ -2,15 +2,15 @@
 let
   desktopItem = makeDesktopItem {
     name = "NordVPN";
-    exec = "nord-nm-gui";
+    exec = "nord-vpn";
     comment = "NordVPN client";
     desktopName = "NordVPN";
     genericName = "NordVPN";
-    categories = "Application;Internet;System;Utilities";
+    categories = "X-Internet;System;X-Utilities";
   };
 in
 qt5.mkDerivation rec {
-  pname = "nord-nm-gui";
+  pname = "nord-vpn";
   version = "1.4.1";
 
   system = builtins.currentSystem;
@@ -34,19 +34,19 @@ qt5.mkDerivation rec {
 
   installPhase = ''
 
-    mkdir -p $out/bin
+    mkdir -p $out/bin $out/icons
     mkdir -p $out/share/applications
-    cp nord_nm_gui.py $out/nord-nm-gui
-    cp nordvpnicon.png $out/nordvpnicon.png
-    chmod +x $out/nord-nm-gui
+    cp nord_nm_gui.py $out/nord-vpn
+    cp nordvpnicon.png $out/icons/nordvpnicon.png
+    chmod +x $out/nord-vpn
 
-    makeWrapper $out/nord-nm-gui $out/bin/nord-nm-gui \
+    makeWrapper $out/nord-vpn $out/bin/nord-vpn \
       --set PATH ${stdenv.lib.makeBinPath [qt5.full
                                            networkmanagerapplet
                                            networkmanager
                                           ]}
 
-    wrapProgram $out/bin/nord-nm-gui \
+    wrapProgram $out/bin/nord-vpn \
        --prefix LD_LIBRARY_PATH : "${stdenv.lib.makeLibraryPath [
                                      qt5.full
                                      networkmanagerapplet

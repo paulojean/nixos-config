@@ -2,6 +2,7 @@
 { pkgs, ... }:
 with pkgs;
 {
-  nord-nm-gui = callPackage ./nord-nm-gui {};
+  nord-vpn = callPackage ./nord-vpn {};
+  sxhkd-statusd = callPackage ./sxhkd-statusd {};
   teiler = callPackage ./teiler {};
 }

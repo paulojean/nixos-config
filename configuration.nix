@@ -76,7 +76,8 @@ in
     adoptopenjdk-bin
     blueman pulseaudio-modules-bt
     jq killall acpi tlp
-    bash wget neovim emacs curl kitty
+    bash wget neovim emacs curl whois kitty
+    harfbuzzFull
     bash-completion exa lsd bat ack ag fd gnugrep pstree
     openssl
     usbutils ipad_charge
@@ -85,24 +86,24 @@ in
     git gitAndTools.diff-so-fancy
     docker docker-compose
     lsof pciutils zip unzip unrar bind cacert
-    fzf file
+    fzf file nnn
+    libreoffice
     nodejs yarn
 
     python27Packages.pip python37Packages.pip python3 python
 
     python37Packages.python-language-server
-    terraform-lsp yaml-language-server
+    terraform-lsp
 
     stack visualvm perl shellcheck
-    clojure leiningen boot
+    clojure leiningen boot clojure-lsp
     transmission transmission-gtk
     networkmanagerapplet arandr
     openvpn gnome3.networkmanager-openvpn
     rofi
-    i3lock-fancy
     gnumake cmake
+    entr
     unclutter
-    light
     patchelf
     sysstat
     yad
@@ -113,12 +114,26 @@ in
     zathura azpainter
     spotify
     gimp
-    wine winetricks lutris vulkan-tools
+    wine winetricks vulkan-tools
     gnutls libinput-gestures libgpgerror
 
-    packages.nord-nm-gui
+    polybar
+    tabbed
+    wmctrl
+    dunst
+
+    # bspwm
+    i3lock-fancy
+    sxhkd socat
+    xorg.xwininfo
+
+    # nvidia-offload
+
+    packages.nord-vpn
+    packages.sxhkd-statusd
     packages.teiler
   ];
+  nixpkgs.config.permittedInsecurePackages = ["p7zip-16.02"];
 
   programs = {
     bash.enableCompletion = true;
@@ -146,7 +161,7 @@ in
   services.xserver =  {
     enable = true;
 
-    desktopManager.plasma5.enable = true;
+    # displayManager.startx.enable = true;
 
     displayManager.sddm = {
       enable = true;
@@ -154,14 +169,18 @@ in
       autoLogin.user = "paulo";
     };
 
-    windowManager.i3 = {
-      enable = true;
-      extraPackages = with pkgs; [
-        dmenu #application launcher most people use
-        i3lock #default i3 screen locker
-        i3blocks #if you are planning on using i3blocks over i3status
-     ];
-    };
+    windowManager.bspwm.enable = true;
+
+    # windowManager.i3 = {
+    #   enable = true;
+    #   package = pkgs.i3-gaps;
+    #   extraPackages = with pkgs; [
+    #     dmenu #application launcher most people use
+    #     i3lock #default i3 screen locker
+    #     i3blocks #if you are planning on using i3blocks over i3status
+    #     polybar
+    #  ];
+    # };
 
     layout = "us";
     xkbVariant = "intl";
@@ -172,6 +191,8 @@ in
 
   # Enable touchpad support.
   services.xserver.libinput.enable = true;
+
+  services.emacs.enable = true;
 
   services.unclutter = {
     enable = true;
@@ -185,13 +206,15 @@ in
 
   services.compton = {
     enable = true;
-    inactiveOpacity = "0.5";
+    inactiveOpacity = 0.9;
+    opacityRules = [
+      "100:class_g = 'Rofi'"
+    ];
   };
 
+  virtualisation.docker.enable = true;
+
   security.pam.services.gdm.enableGnomeKeyring = true;
-  #security.sudo.extraConfig = ''
-  #  %wheel ALL=(ALL) NOPASSWD: ${pkgs.light}/bin/light
-  #'';
   security.sudo.extraRules = [
     {
       commands = [
@@ -200,18 +223,7 @@ in
           options = [ "NOPASSWD" ];
         }
       ];
-      groups = [ "wheel" "video" ];
-      users = [ "paulo" ];
-    }
-    {
-      commands = [
-        {
-          command = "/run/current-system/sw/bin/light";
-          options = [ "NOPASSWD" ];
-        }
-      ];
-      groups = [ "wheel" "video" ];
-      users = [ "paulo" ];
+      groups = [ "wheel" ];
     }
   ];
 
@@ -220,19 +232,26 @@ in
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.paulo = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "video" "audio" "networkmanager" "kvm" "render" "sddm" "light" ];
+    extraGroups = [ "wheel" "docker" "video" "audio" "networkmanager" "kvm" "render" "sddm" "light" ];
   };
 
   nixpkgs.overlays = [ (self: super: {
-    lutris = super.lutris.overrideAttrs (attrs: rec {
-      patches = [ ./patches/lutris.patch ];
-    });
+    # lutris = super.lutris.overrideAttrs (attrs: rec {
+    #   patches = [ ./patches/lutris.patch ];
+    # });
+    polybar = super.polybar.override {
+      pulseSupport = true;
+      mpdSupport = true;
+    };
+    dunst = super.dunst.override {
+      dunstify = true;
+    };
   })];
 
   # This value determines the NixOS release with which your system is to be
   # compatible, in order to avoid breaking some software such as database
   # servers. You should change this only after NixOS release notes say you
   # should.
-  system.stateVersion = "19.09"; # Did you read the comment?
+  system.stateVersion = "20.03"; # Did you read the comment?
 
 }
