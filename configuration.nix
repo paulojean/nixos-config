@@ -58,7 +58,7 @@ in
 
     # avoid hard block on susped
     # https://askubuntu.com/a/1057793
-    "quiet splash"
+    "quiet" "splash"
 
     "intel_pstate=disable"
   ];
@@ -73,6 +73,25 @@ in
   networking.interfaces.wlo1.useDHCP = true;
   networking.enableIPv6 = false;
 
+  # Fixing IPv6 bug, see https://github.com/NixOS/nixpkgs/issues/87802#issuecomment-628536317
+  networking.networkmanager.dispatcherScripts = [{
+    source = pkgs.writeText "upHook" ''
+      if [ "$2" != "up" ]; then
+      logger "exit: event $2 != up"
+      exit
+      fi
+      echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
+    '';
+    type = "basic";
+  }];
+
+  # chromecastSupport
+  networking.firewall.allowedTCPPorts = [
+    8010 # chromecastSupport
+  ];
+  networking.firewall.allowedUDPPortRanges = [ { from = 32768; to = 60999; } ];
+  services.avahi.enable = true;
+
   system.autoUpgrade.enable = true;
   i18n = {
     defaultLocale = "en_US.UTF-8";
@@ -86,7 +105,6 @@ in
 
   environment.pathsToLink = [ "/libexec" ];
   environment.systemPackages = with pkgs; [
-    albert
     adoptopenjdk-bin
     blueman pulseaudio-modules-bt
     jq killall acpi tlp
@@ -95,8 +113,8 @@ in
     # bash-completion
     exa lsd bat ack ag fd gnugrep pstree
     openssl wireshark
-    usbutils ipad_charge
-    firefox bitwarden vlc tmux
+    udiskie usbutils ipad_charge
+    firefox chromium bitwarden vlc tmux
     keynav xsel xclip xcape htop sqlite
     git gitAndTools.diff-so-fancy
     docker-compose
@@ -110,6 +128,7 @@ in
     terraform-lsp
 
     stack visualvm perl shellcheck
+    scala_2_13 sbt
     clojure leiningen boot clojure-lsp
     transmission transmission-gtk
     networkmanagerapplet arandr
@@ -125,7 +144,7 @@ in
     feh
     xdotool
     xorg.xev
-    zathura azpainter
+    zathura azpainter mcomix3
     spotify
     gimp
     wine winetricks vulkan-tools
@@ -135,6 +154,12 @@ in
     tabbed
     wmctrl
     dunst
+
+    packages.eww
+    # eww widgets dependencies
+    playerctl
+    wirelesstools
+
 
     # - bspwm
     i3lock-fancy
@@ -162,7 +187,7 @@ in
   programs = {
     # bash.enableCompletion = true;
     light.enable = true;
-    steam.enable = true;
+    # steam.enable = true;
   };
 
   fonts.fonts = with pkgs; [
@@ -216,8 +241,18 @@ in
     videoDrivers = [ "displaylink" "modesetting" ];
   };
 
-  # Enable touchpad support.
-  services.xserver.libinput.enable = true;
+    # Enable touchpad support.
+    libinput = {
+      enable = true;
+      touchpad = {
+        accelSpeed = "0.9";
+        clickMethod = "clickfinger";
+        # disableWhileTyping = true;
+        # naturalScrolling = true;
+        tapping = true;
+      };
+    };
+  };
 
   services.emacs.enable = true;
 
@@ -262,7 +297,7 @@ in
     }
   ];
 
-  services.gnome3.gnome-keyring.enable = true;
+  services.gnome.gnome-keyring.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.paulo = {
@@ -288,6 +323,6 @@ in
   # compatible, in order to avoid breaking some software such as database
   # servers. You should change this only after NixOS release notes say you
   # should.
-  system.stateVersion = "20.09"; # Did you read the comment?
+  system.stateVersion = "21.05"; # Did you read the comment?
 
 }
