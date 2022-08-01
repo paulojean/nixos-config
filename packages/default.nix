@@ -6,4 +6,7 @@ with pkgs;
   sxhkd-statusd = callPackage ./sxhkd-statusd {};
   teiler = callPackage ./teiler {};
   eww = callPackage ./eww {};
+  icons = {
+    pokemon-cursor = callPackage ./icons/pokemon-cursor {};
+  };
 }

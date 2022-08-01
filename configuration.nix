@@ -33,21 +33,19 @@ in
   hardware.pulseaudio = {
     enable = true;
 
-    extraModules = [ pkgs.pulseaudio-modules-bt ];
-
     # NixOS allows either a lightweight build (default) or full build of PulseAudio to be installed.
     # Only the full build has Bluetooth support, so it must be selected here.
     package = pkgs.pulseaudioFull;
   };
 
-  hardware.nvidia.prime = {
-    offload.enable = true;
+  # hardware.nvidia.prime = {
+  #   offload.enable = true;
 
-    # Bus ID of the Intel GPU. You can find it using lspci, either under 3D or VGA
-    intelBusId = "PCI:0:2:0";
-    # Bus ID of the NVIDIA GPU. You can find it using lspci, either under 3D or VGA
-    nvidiaBusId = "PCI:1:0:0";
-  };
+  #   # Bus ID of the Intel GPU. You can find it using lspci, either under 3D or VGA
+  #   intelBusId = "PCI:0:2:0";
+  #   # Bus ID of the NVIDIA GPU. You can find it using lspci, either under 3D or VGA
+  #   nvidiaBusId = "PCI:1:0:0";
+  # };
 
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
@@ -90,6 +88,12 @@ in
     8010 # chromecastSupport
   ];
   networking.firewall.allowedUDPPortRanges = [ { from = 32768; to = 60999; } ];
+  nix = {
+    extraOptions = ''
+      experimental-features = nix-command flakes
+    '';
+  };
+
   services.avahi.enable = true;
 
   system.autoUpgrade.enable = true;
@@ -105,13 +109,16 @@ in
 
   environment.pathsToLink = [ "/libexec" ];
   environment.systemPackages = with pkgs; [
-    adoptopenjdk-bin
-    blueman pulseaudio-modules-bt
+    jdk11 jdk17
+    blueman
     jq killall acpi tlp
-    bash wget neovim emacs curl whois kitty
+    bash wget
+    neovim vimPlugins.vim-plug
+    emacs
+    curl whois kitty
     harfbuzzFull
     # bash-completion
-    exa lsd bat ack ag fd gnugrep pstree
+    exa lsd bat ack silver-searcher fd gnugrep pstree bottom
     openssl wireshark
     udiskie usbutils ipad_charge
     firefox chromium bitwarden vlc tmux
@@ -129,7 +136,7 @@ in
 
     stack visualvm perl shellcheck
     scala_2_13 sbt
-    clojure leiningen boot clojure-lsp
+    clojure leiningen boot clojure-lsp babashka
     transmission transmission-gtk
     networkmanagerapplet arandr
     openvpn gnome3.networkmanager-openvpn
@@ -166,15 +173,13 @@ in
     sxhkd socat
     xorg.xwininfo
 
-    nvidia-offload
+    # nvidia-offload
 
     packages.sxhkd-statusd
     packages.teiler
+    packages.icons.pokemon-cursor
 
     p7zip
-    epsxe
-
-    playonlinux
 
     # - tmux-fzf
     bc
@@ -198,6 +203,8 @@ in
 
   powerManagement.enable = true;
   powerManagement.powertop.enable = true;
+
+  services.fstrim.enable = true;
   services.tlp.enable = true;
 
   services.usbmuxd.enable = true;
@@ -238,8 +245,8 @@ in
     xkbOptions = "eurosign:e, caps:ctrl_modifier";
 
     # "displaylink" to make nix recognize HDMI entry
-    videoDrivers = [ "displaylink" "modesetting" ];
-  };
+    # videoDrivers = [ "displaylink" "modesetting" ];
+    videoDrivers = [ "modesetting" ];
 
     # Enable touchpad support.
     libinput = {
@@ -275,6 +282,25 @@ in
     ];
   };
 
+  environment.etc = {
+    "modprobe.d/blacklist-nouveau.conf".text = ''
+      blacklist nouveau
+      options nouveau modeset=0
+    '';
+  };
+
+  services.udev.extraRules = ''
+    # https://wiki.archlinux.org/title/Hybrid_graphics#Using_udev_rules
+    # Remove NVIDIA USB xHCI Host Controller devices, if present
+    ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c0330", ATTR{power/control}="auto", ATTR{remove}="1"
+    # Remove NVIDIA USB Type-C UCSI devices, if present
+    ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c8000", ATTR{power/control}="auto", ATTR{remove}="1"
+    # Remove NVIDIA Audio devices, if present
+    ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300", ATTR{power/control}="auto", ATTR{remove}="1"
+    # Remove NVIDIA VGA/3D controller devices
+    ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x03[0-9]*", ATTR{power/control}="auto", ATTR{remove}="1"
+  '';
+
   virtualisation = {
     docker.enable = true;
     podman.enable = true;
@@ -306,13 +332,9 @@ in
   };
 
   nixpkgs.overlays = [ (self: super: {
-    # lutris = super.lutris.overrideAttrs (attrs: rec {
-    #   patches = [ ./patches/lutris.patch ];
-    # });
     polybar = super.polybar.override {
       pulseSupport = true;
       mpdSupport = true;
-      # i3Support = true;
       i3GapsSupport = true;
       jsoncpp = super.jsoncpp;
       i3 = super.i3;
@@ -323,6 +345,6 @@ in
   # compatible, in order to avoid breaking some software such as database
   # servers. You should change this only after NixOS release notes say you
   # should.
-  system.stateVersion = "21.05"; # Did you read the comment?
+  system.stateVersion = "22.05"; # Did you read the comment?
 
 }

@@ -20,7 +20,7 @@ in
 
   nativeBuildInputs = [ pkg-config gtk3 ];
   buildInputs = [
-    gnome.gtk3
+    gtk3
     pango
     lispPackages.cl-cffi-gtk-gdk-pixbuf
     gdk-pixbuf
